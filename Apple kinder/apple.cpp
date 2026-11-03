@@ -1,6 +1,8 @@
 #include<iostream>
 #include<vector>
 #include<string>
+#include <fstream>
+#include <iomanip>
 #include<map>
 using namespace std;
 class book{
@@ -65,6 +67,7 @@ class applelib{
         return 1;
    }
    book* search(string name){
+    if(mp.find(name)==mp.end())return nullptr;
      return mp[name];
 
    }
@@ -74,6 +77,35 @@ class applelib{
         cout<<m.first<<"\n";
       }
    }
+   void saveLibrary() {
+    ofstream file("library.txt");
+
+    if (!file) {
+        cout << "Error opening file!\n";
+        return;
+    }
+
+    file << mp.size() << "\n";
+
+    for (auto &entry : mp) {
+        book* bk = entry.second;
+
+        file << quoted(bk->name) << "\n";
+        file << quoted(bk->author) << "\n";
+        file << quoted(bk->date) << "\n";
+
+        file << bk->page << "\n";
+        file << bk->b.size() << "\n";
+
+        // for (const string &text : bk->b) {
+        //     file << quoted(text) << "\n";
+        // }
+    }
+
+    file.close();
+
+    cout << "Library saved successfully!\n";
+}
 };
  applelib* apple=new applelib();
  class readlist{
@@ -135,6 +167,7 @@ class applelib{
  };
 int main(){
    string passcode;
+   cout<<"Enter the passcode:"<<"\n";
    cin>>passcode;
    if(passcode=="Alpha016"){
       cout<<"Welcome Raam!!!"<<"\n";
@@ -162,6 +195,7 @@ int main(){
           apple->add(name,arr,author,date);
           n--;
       }
+      apple->saveLibrary();
     }
     else{
         cout<<"How many Items would u like to remove"<<"\n";
