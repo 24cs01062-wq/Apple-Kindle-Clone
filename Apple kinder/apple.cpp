@@ -97,14 +97,61 @@ class applelib{
         file << bk->page << "\n";
         file << bk->b.size() << "\n";
 
-        // for (const string &text : bk->b) {
-        //     file << quoted(text) << "\n";
-        // }
+        //  for (const string &text : bk->b) {
+        //      file << quoted(text) << "\n";
+        //  }
     }
 
     file.close();
 
     cout << "Library saved successfully!\n";
+}
+void loadLibrary() {
+    ifstream file("library.txt");
+
+    if (!file) {
+        cout << "No existing library found.\n";
+        return;
+    }
+
+    int n;
+    if (!(file >> n) || n < 0) {
+        cout << "Invalid library file.\n";
+        return;
+    }
+
+    for (int i = 0; i < n; i++) {
+        string name, author, date;
+        int page;
+        int totalPages;
+
+        if (!(file >> quoted(name)
+                   >> quoted(author)
+                   >> quoted(date)
+                   >> page >> totalPages) || totalPages < 0) {
+            cout << "Invalid book data.\n";
+            return;
+        }
+
+        vector<string> pages(totalPages);
+
+        for (int j = 0; j < totalPages; j++) {
+            if (!(file >> quoted(pages[j]))) {
+                cout << "Invalid page data.\n";
+                return;
+            }
+        }
+
+        add(name, pages, author, date);
+
+        if (totalPages > 0) {
+            mp[name]->go_to(page);
+        }
+    }
+
+    file.close();
+
+    cout << "Library loaded successfully!\n";
 }
 };
  applelib* apple=new applelib();
@@ -166,6 +213,7 @@ class applelib{
    }
  };
 int main(){
+     apple->loadLibrary();
    string passcode;
    cout<<"Enter the passcode:"<<"\n";
    cin>>passcode;
@@ -195,7 +243,7 @@ int main(){
           apple->add(name,arr,author,date);
           n--;
       }
-      apple->saveLibrary();
+      
     }
     else{
         cout<<"How many Items would u like to remove"<<"\n";
@@ -211,6 +259,7 @@ int main(){
            m--;
         }
     }
+    apple->saveLibrary();
      apple->display();
 
    }
