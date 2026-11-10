@@ -6,45 +6,109 @@
 #include<map>
 using namespace std;
 class book{
-     public:
-        vector<string>b;
-        string author;
-        string date;
-        string name;
-        int page;
-        book(vector<string>&b,string name,string author,string date){
-          this->author=author;
-          this->date=date;
-            page=0;
-            this->b=b;
-            this->name=name;
+    private:
+       string title;
+       int totalpages;
+       string date;
+       vector<bool>bookmark;
+       int currentpage;
+       string author;
+       vector<string>pages;
+       vector<bool>viewed;
+    public:
+        book(string title,string author,vector<string>& pages,string date){
+            bookmark.resize(pages.size(),false);
+            viewed.resize(pages.size(),false);
+            currentpage=0;
+            this->date=date;
+            this->author=author;
+            totalpages=pages.size();
+            this->pages=pages;
+            this->title=title;
+        }
+        vector<string> bookcontent(){
+            return pages;
         } 
-        void updatebook(vector<string>&arr){
-          b=arr;
-          return;
-        }  
-        bool nextpage(){
-            if(page==b.size()-1)return 0;
-            page++;
-            return 1;
+        string bookname(){
+            return title;
         }
-        bool prevpage(){
-          if(page==0)return 0;
-          page--;
-          return 1;
+        string authorname(){
+            return author;
         }
-        bool go_to(int idx){
-          if(idx>=0 && idx<b.size()){
-              page=idx;
-              return 1;
-          }
-          return 0;
+        string issuedate(){
+            return date;
         }
-        void display(){
-             cout<<b[page]<<" ";
+        void updatebook(vector<string>& arr){
+               this->pages=pages;
         }
-
-         
+        int page(){
+            return currentpage;
+        }
+        void bookinfo(){
+            cout<<"Title:"<<title<<"\n";
+            cout<<"Author:"<<author<<"\n";
+            cout<<"No of pages:"<<totalpages<<"\n";
+            return;
+        }
+        void viewpage(){
+            cout<<"Current page:"<<currentpage<<"\n";
+            cout<<pages[currentpage]<<"\n";
+            viewed[currentpage]=true;
+            return; 
+        }
+        void prevpage(){
+            if(currentpage==0){
+                cout<<"Invalid page number";
+                return;
+            }
+            currentpage--;
+        }
+        void nextpage(){
+            if(currentpage==totalpages-1){
+                cout<<"Invalid page number";
+                return;
+            }
+            currentpage++;
+        }
+        void gotopage(int idx){
+            if(idx<0 || idx>=totalpages){
+                cout<<"Invalid page index";
+                return;
+            }
+            currentpage=idx;
+        }
+        void setbookmark(){
+            bookmark[currentpage]=true;
+            return;
+        }
+        void del(int idx){
+            if(idx<0 || idx>=totalpages){
+                cout<<"Invalid page index";
+                return;
+            }
+            if(bookmark[idx]==false){
+                cout<<"No bookmark on this page\n";
+                return;
+            }
+            bookmark[idx]=false;
+            return;
+        }
+        double bookcomp(){
+            int count=0;
+            for(int i=0;i<totalpages;i++){
+                if(viewed[i]==true)count++;
+            }
+            double comp=(double)(count*100)/totalpages;
+            return comp;
+        }
+        void viewallbookmark(){
+            cout<<"All bookmark for "<<title<<"\n";
+            for(int i=0;i<totalpages;i++){
+                if(bookmark[i]==true){
+                    cout<<"->"<<i<<"\n";
+                }
+            }
+        }
 };
 class applelib{
   private:
@@ -56,7 +120,7 @@ class applelib{
           mp[name]->updatebook(arr);
           return;
       }
-      mp[name]=new book(arr,name,author,date); 
+      mp[name]=new book(name,author,arr,date); 
       return;
    }
    bool del(string name){
@@ -90,12 +154,12 @@ class applelib{
     for (auto &entry : mp) {
         book* bk = entry.second;
 
-        file << quoted(bk->name) << "\n";
-        file << quoted(bk->author) << "\n";
-        file << quoted(bk->date) << "\n";
+        file << quoted(bk->bookname()) << "\n";
+        file << quoted(bk->authorname()) << "\n";
+        file << quoted(bk->issuedate()) << "\n";
 
-        file << bk->page << "\n";
-        file << bk->b.size() << "\n";
+        file << bk->page() << "\n";
+        file << bk->bookcontent().size() << "\n";
 
         //  for (const string &text : bk->b) {
         //      file << quoted(text) << "\n";
@@ -145,7 +209,7 @@ void loadLibrary() {
         add(name, pages, author, date);
 
         if (totalPages > 0) {
-            mp[name]->go_to(page);
+            mp[name]->gotopage(page);
         }
     }
 
@@ -158,6 +222,7 @@ void loadLibrary() {
  class readlist{
      private:
        vector<book*>lib;
+       map<string,int>fav;
        book* active;
        applelib* a;
    public:
@@ -175,7 +240,7 @@ void loadLibrary() {
    }
    bool del(string name){
        for(int i=0;i<lib.size();i++){
-            if(lib[i]->name==name){
+            if(lib[i]->bookname()==name){
                 lib.erase(lib.begin()+i);
                 return 1;
             }
@@ -184,33 +249,107 @@ void loadLibrary() {
    }
    void display(){
      for(int i=0;i<lib.size();i++){
-          cout<<i+1<<"."<<lib[i]->name<<"\n";
+          cout<<i+1<<"."<<lib[i]->bookname()<<"\n";
      }
    }
-   bool select(string name){
-       for(int i=0;i<lib.size();i++){
-          if(lib[i]->name==name){
-                  active=lib[i];
-                  return 1;
-          }
+    void setactive(string name){
+        for(int i=0;i<lib.size();i++){
+            if(lib[i]->bookname()==name){
+                active=lib[i];
+                cout<<"Opening "<<name<<"..."<<"\n";
+                active->viewpage();
+                return; 
+            }
+        } 
+        cout<<name<<" doesnt exist in your Library!!!"<<"\n"; 
      }
-     return 0;
-   }
-   bool read(){
-     if(active==NULL)return 0;
-     active->display();
-     return 1;
-   }
-   bool flip(bool t){
-     if(active==NULL)return 0;
-     if(t==1)active->nextpage();
-     else active->prevpage();
-     return 0;
-   }
-   bool search(int idx){
-       bool s=active->go_to(idx);
-       return s;
-   }
+     
+    void close(){
+        if(active==nullptr){
+            cout<<"No books are currently active!!"<<"\n";
+            return;
+        }
+        active=nullptr;
+        cout<<"Book Closed!!"<<"\n";
+    }
+    void setfav(){
+        if(active==nullptr){
+            cout<<"No book opened!!"<<"\n";
+            return;
+        }
+        fav[active->bookname()]=1;
+     }
+        void bookinfo(){
+            if(active==nullptr){
+                cout<<"No book opened!!"<<"\n";
+                return;
+            }
+            return active->bookinfo();
+        }
+        void gotoprevpage(){
+            if(active==nullptr){
+                cout<<"No book opened!!"<<"\n";
+                return;
+            }
+            active->prevpage();
+            active->viewpage();
+        }
+        void gotonextpage(){
+            if(active==nullptr){
+                cout<<"No book opened!!"<<"\n";
+                return;
+            }
+            active->nextpage();
+            active->viewpage();
+        }
+        void gotopage(int idx){
+            if(active==nullptr){
+                cout<<"No book opened!!"<<"\n";
+                return;
+            }
+            active->gotopage(idx);
+            active->viewpage();
+        } 
+        void setbookmark(){
+            if(active==nullptr){
+                cout<<"No book opened!!"<<"\n";
+                return;
+            }
+            active->setbookmark();
+        }
+        void delbookmark(int idx){
+            if(active==nullptr){
+                cout<<"No book opened!!"<<"\n";
+                return;
+            }
+            active->del(idx);
+        }
+        double bookcomp(){
+            if(active==nullptr){
+                cout<<"No book opened!!"<<"\n";
+                return 0.0;
+            }
+            return active->bookcomp();
+        }
+        void viewallbookmark(){
+            if(active==nullptr){
+                cout<<"No book opened!!"<<"\n";
+                return;
+            }
+            active->viewallbookmark();
+        }
+        void search(string name){
+           
+        for(int i=0;i<lib.size();i++){
+            if(lib[i]->bookname()==name){
+                cout<<name<<"exist in your Library!!!"<<"\n";
+                return; 
+            }
+        } 
+        cout<<name<<" doesnt exist in your Library!!!"<<"\n"; 
+     
+        }
+        
  };
 int main(){
      apple->loadLibrary();
